@@ -1,5 +1,5 @@
 import random
-from typing import TypedDict
+from typing import TypedDict, Callable
 Pa: float = 0.1
 Pb: float = 0.1
 
@@ -21,6 +21,7 @@ class AtsNode:
     alpha_hat: float
     beta_hat: float
     node_time: float
+    send: Callable[[int, Data], None]
 
     def __init__(self, id: int, alpha: float, beta: float):
         self.id = id
@@ -67,7 +68,7 @@ class AtsNode:
 
     def update(self):
         if self.is_send():
-            self.send(self.id)
+            self.send(self.id, self.get_node_data())
 
         # Update prediction
         for data in self.last_datas.values():
@@ -84,18 +85,17 @@ class AtsNode:
 
 
 # main
-def connect_node(matrix, id1, id2):
-    matrix[id1][id2] = 1
-    matrix[id2][id1] = 1
+def connect_node(matrix: list[list[bool]], id1: int, id2: int):
+    matrix[id1][id2] = True
+    matrix[id2][id1] = True
 
 
-def generate_sendfunc(nodes, matrix):
-    def send(sender_id):
+def generate_sendfunc(nodes: list[AtsNode], matrix: list[list[int]]) -> Callable[[int, Data], None]:
+    def broadcast(sender_id: int, data: Data) -> None:
         for target_id in range(len(nodes)):
             if matrix[sender_id][target_id] == 1:
-                data: Data = nodes[sender_id].get_node_data()
                 nodes[target_id].recieve(data)
-    return send
+    return broadcast
 
 
 # とりあえず2個で
@@ -104,11 +104,12 @@ if __name__ == "__main__":
     random.seed(42)
 
     # Create the network
-    connection_matrix = [[0 for x in range(NODE_NUM)] for y in range(NODE_NUM)]
+    connection_matrix: list[list[bool]] = [
+        [False for x in range(NODE_NUM)] for y in range(NODE_NUM)]
     connect_node(connection_matrix, 0, 1)
 
     # Create the nodes
-    nodes = []
+    nodes: list[AtsNode] = []
     for i in range(NODE_NUM):
         nodes.append(AtsNode(id=i, alpha=random.uniform(
             0.9, 1.1), beta=random.uniform(-0.5, 0.5)))
