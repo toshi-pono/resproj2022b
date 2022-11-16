@@ -34,8 +34,17 @@ if __name__ == "__main__":
     for t in range(50):
         print(
             f't={t}, diff={nodes[0].get_predict_time(t) - nodes[1].get_predict_time(t):.3g}, origin={nodes[0].get_node_time(t) - nodes[1].get_node_time(t):.3g}')
+        print(nodes[0].raw_node._RawNode__beta * nodes[0].alpha_hat + nodes[0].beta_hat,
+              nodes[1].raw_node._RawNode__beta * nodes[1].alpha_hat + nodes[1].beta_hat, (nodes[0].raw_node._RawNode__beta + nodes[1].raw_node._RawNode__beta) / 2)
 
         for i in range(NODE_NUM):
             nodes[i].update_time(t)
         for i in range(NODE_NUM):
-            nodes[i].update()
+            nodes[i].update_send()
+        for i in range(NODE_NUM):
+            nodes[i].update_prediction()
+
+        # print("------------")
+        # print(nodes[0].last_datas[0])
+        # print(nodes[0].last_datas[1])
+        # print("------------")

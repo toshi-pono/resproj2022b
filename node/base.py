@@ -81,11 +81,12 @@ class PredictNode:
         data['updated_at'] = self.node_time
         self.last_datas[data['id']] = data
 
-    def update(self):
+    def update_send(self):
         if self.is_send():
             self.send(self.id, self.get_node_data())
             self.last_datas[self.id] = self.get_node_data()
 
+    def update_prediction(self):
         # Update prediction
         self.__update_alpha_hat()
         self.__update_beta_hat()
