@@ -14,7 +14,13 @@ class Data(TypedDict):
 
 class AtsNode:
     last_datas: dict[int, Data] = {}
-    id: int = 0
+    drift_rates: dict[int, float] = {}
+    id: int
+    alpha: float
+    beta: float
+    alpha_hat: float
+    beta_hat: float
+    node_time: float
 
     def __init__(self, id: int, alpha: float, beta: float):
         self.id = id
@@ -25,6 +31,7 @@ class AtsNode:
         self.node_time = 0.0
 
         self.last_datas[self.id] = self.get_node_data()
+        self.drift_rates[self.id] = 1.0
 
     def get_node_data(self) -> Data:
         return {
@@ -48,6 +55,13 @@ class AtsNode:
     def recieve(self, data: Data):
         print(
             f'\tid={data["id"]}: recieve: alpha_hat={data["alpha_hat"]:.3g}, beta_hat={data["beta_hat"]:.3g}, time={data["time"]:.3g}')
+        sender_id = data['id']
+        if self.last_datas.get(sender_id) is None:
+            self.drift_rates[sender_id] = 1.0
+        else:
+            self.drift_rates[sender_id] = (data['time'] - self.last_datas[sender_id]['time']) / (
+                self.node_time - self.last_datas[sender_id]['updated_at'])
+
         data['updated_at'] = self.node_time
         self.last_datas[data['id']] = data
 
@@ -58,7 +72,8 @@ class AtsNode:
         # Update prediction
         for data in self.last_datas.values():
             self.alpha_hat += Pa * \
-                (data['alpha_hat'] - self.last_datas[self.id]['alpha_hat'])
+                (self.drift_rates.get(data['id'], 1.0) * data['alpha_hat'] -
+                 self.last_datas[self.id]['alpha_hat'])
             self.beta_hat += Pb * (data['alpha_hat'] * data['time'] + data['beta_hat'] - (
                 self.last_datas[self.id]['alpha_hat'] * self.last_datas[self.id]['time'] + self.last_datas[self.id]['beta_hat']))
 
