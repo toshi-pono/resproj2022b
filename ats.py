@@ -13,15 +13,12 @@ class AtsNode(PredictNode):
         return True
 
 
-# とりあえず2個で
-NODE_NUM = 3
 if __name__ == "__main__":
-    random.seed(23)
+    random.seed(42)
 
     # Create the network
-    connection_matrix = connection.create_matrix(NODE_NUM)
-    connection.connect_node(connection_matrix, 0, 1)
-    connection.connect_node(connection_matrix, 1, 2)
+    connection_matrix, NODE_NUM = connection.load_connection_matrix(
+        "testcase/connection3.txt")
 
     # Create the nodes
     nodes: list[AtsNode] = []
@@ -48,7 +45,11 @@ if __name__ == "__main__":
                     max_diff = diff
                 if origin_diff > max_origin_diff:
                     max_origin_diff = origin_diff
-        print(f"max_diff: {max_diff} max_origin_diff: {max_origin_diff}")
+        print(f"t: {t} max_diff: {max_diff} max_origin_diff: {max_origin_diff}")
+        # print(
+        #     f"t: {t} nodes[0].alpha_hat: {nodes[1].alpha_hat} nodes[0].beta_hat: {nodes[1].beta_hat}")
+        # print("----------------")
+        # print("")
 
         for i in range(NODE_NUM):
             nodes[i].update_time(t)
