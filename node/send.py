@@ -7,5 +7,5 @@ def generate_broadcast(nodes: list[PredictNode], matrix: ConnectionMatrix) -> Ca
     def broadcast(sender_id: int, data: Data) -> None:
         for target_id in range(len(nodes)):
             if matrix[sender_id][target_id] == 1:
-                nodes[target_id].recieve(data)
+                nodes[target_id].recieve(data.copy())
     return broadcast

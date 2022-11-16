@@ -68,10 +68,7 @@ class PredictNode:
         return True
 
     def recieve(self, data: Data):
-        print(
-            f'\tid={data["id"]}: recieve: alpha_hat={data["alpha_hat"]:.3g}, beta_hat={data["beta_hat"]:.3g}, time={data["time"]:.3g}')
         sender_id = data['id']
-        # print(self.last_datas)
         if self.last_datas.get(sender_id) is None:
             self.drift_rates[sender_id] = 1.0
         else:
