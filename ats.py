@@ -1,55 +1,71 @@
 import random
-Pa = 0.01
-Pb = 0.01
+from typing import TypedDict
+Pa: float = 0.1
+Pb: float = 0.1
+
+
+class Data(TypedDict):
+    id: int
+    alpha_hat: float
+    beta_hat: float
+    time: float
+    updated_at: float
 
 
 class AtsNode:
-    last_alphas = {}
-    last_betas = {}
-    last_times = {}
-    id = 0
+    last_datas: dict[int, Data] = {}
+    id: int = 0
 
-    def __init__(self, id, alpha, beta):
+    def __init__(self, id: int, alpha: float, beta: float):
         self.id = id
         self.alpha = alpha
         self.beta = beta
-        self.alpha_hat = 1
-        self.beta_hat = 0
+        self.alpha_hat = 1.0
+        self.beta_hat = 0.0
+        self.node_time = 0.0
 
-        self.last_alphas[id] = 0
-        self.last_betas[id] = 0
-        self.last_times[id] = 0
+        self.last_datas[self.id] = self.get_node_data()
 
-    def getNodeTime(self, t):
+    def get_node_data(self) -> Data:
+        return {
+            'id': self.id,
+            'alpha_hat': self.alpha_hat,
+            'beta_hat': self.beta_hat,
+            'time': self.node_time,
+            'updated_at': -1,  # -1 means not updated
+        }
+
+    def get_node_time(self, t: float) -> float:
         return self.alpha * t + self.beta
 
-    def getPredictTime(self, t):
-        return self.alpha_hat * self.getNodeTime(t) + self.beta_hat
+    def get_predict_time(self, t: float) -> float:
+        return self.alpha_hat * self.get_node_time(t) + self.beta_hat
 
-    def is_send(self, t):
+    def is_send(self) -> bool:
         # Send always
         return True
 
-    def recieve(self, id, alpha, beta, time):
-        print(f'\t{id=}: recieve: {alpha=:.3g}, {beta=:.3g}, {time=:.3g}')
-        self.last_alphas[id] = alpha
-        self.last_betas[id] = beta
-        self.last_times[id] = time
+    def recieve(self, data: Data):
+        print(
+            f'\tid={data["id"]}: recieve: alpha_hat={data["alpha_hat"]:.3g}, beta_hat={data["beta_hat"]:.3g}, time={data["time"]:.3g}')
+        data['updated_at'] = self.node_time
+        self.last_datas[data['id']] = data
 
-    def update(self, t, rate):
-        if self.is_send(t):
-            self.send(self.id, self.getNodeTime(t))
+    def update(self):
+        if self.is_send():
+            self.send(self.id)
 
         # Update prediction
-        for key in self.last_alphas:
+        for data in self.last_datas.values():
             self.alpha_hat += Pa * \
-                (rate * self.last_alphas[key] - self.last_alphas[self.id])
-            self.beta_hat += Pb * (self.last_alphas[key] * self.last_times[key] + self.last_betas[key] - (
-                self.last_alphas[self.id] * self.last_times[self.id] + self.last_betas[self.id]))
+                (data['alpha_hat'] - self.last_datas[self.id]['alpha_hat'])
+            self.beta_hat += Pb * (data['alpha_hat'] * data['time'] + data['beta_hat'] - (
+                self.last_datas[self.id]['alpha_hat'] * self.last_datas[self.id]['time'] + self.last_datas[self.id]['beta_hat']))
 
-        self.last_alphas[self.id] = self.alpha_hat
-        self.last_betas[self.id] = self.beta_hat
-        self.last_times[self.id] = self.getNodeTime(t)
+        self.last_datas[self.id] = self.get_node_data()
+
+    def update_time(self, t: float):
+        self.node_time = self.get_node_time(t)
 
 
 # main
@@ -58,12 +74,12 @@ def connect_node(matrix, id1, id2):
     matrix[id2][id1] = 1
 
 
-def generateSendFunc(nodes, matrix):
-    def send(id, nodeTime):
-        for i in range(len(nodes)):
-            if matrix[id][i] == 1:
-                nodes[i].recieve(id, nodes[id].alpha_hat,
-                                 nodes[id].beta_hat, nodeTime)
+def generate_sendfunc(nodes, matrix):
+    def send(sender_id):
+        for target_id in range(len(nodes)):
+            if matrix[sender_id][target_id] == 1:
+                data: Data = nodes[sender_id].get_node_data()
+                nodes[target_id].recieve(data)
     return send
 
 
@@ -73,23 +89,23 @@ if __name__ == "__main__":
     random.seed(42)
 
     # Create the network
-    connectionMatrix = [[0 for x in range(NODE_NUM)] for y in range(NODE_NUM)]
-    connect_node(connectionMatrix, 0, 1)
+    connection_matrix = [[0 for x in range(NODE_NUM)] for y in range(NODE_NUM)]
+    connect_node(connection_matrix, 0, 1)
 
     # Create the nodes
     nodes = []
     for i in range(NODE_NUM):
         nodes.append(AtsNode(id=i, alpha=random.uniform(
             0.9, 1.1), beta=random.uniform(-0.5, 0.5)))
-
     for i in range(NODE_NUM):
-        nodes[i].send = generateSendFunc(nodes, connectionMatrix)
+        nodes[i].send = generate_sendfunc(nodes, connection_matrix)
 
     # Run the simulation
     for t in range(50):
         print(
-            f't={t}, diff={nodes[0].getPredictTime(t) - nodes[1].getPredictTime(t):.3g}, origin={nodes[0].getNodeTime(t) - nodes[1].getNodeTime(t):.3g}')
+            f't={t}, diff={nodes[0].get_predict_time(t) - nodes[1].get_predict_time(t):.3g}, origin={nodes[0].get_node_time(t) - nodes[1].get_node_time(t):.3g}')
+
         for i in range(NODE_NUM):
-            nodes[i].update(t, nodes[1-i].alpha / nodes[i].alpha)
-        # print(
-        #     f't={t}, diff={nodes[0].getPredictTime(t) - nodes[1].getNodeTime(t):.3g}, origin={nodes[0].getPredictTime(t) - nodes[1].getNodeTime(t):.3g}')
+            nodes[i].update_time(t)
+        for i in range(NODE_NUM):
+            nodes[i].update()
