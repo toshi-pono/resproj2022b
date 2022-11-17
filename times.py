@@ -4,8 +4,8 @@ from node import connection
 from node.send import generate_broadcast
 from node.base import PredictNode
 
-Pa: float = 0.2
-Pb: float = 0.2
+Pa: float = 0.1
+Pb: float = 0.1
 
 
 class TimeDrivenNode(PredictNode):
