@@ -87,16 +87,16 @@ class PredictNode:
 
     def update_prediction(self):
         # Update prediction
-        self.__update_alpha_hat()
-        self.__update_beta_hat()
+        self.update_alpha_hat()
+        self.update_beta_hat()
 
-    def __update_alpha_hat(self):
+    def update_alpha_hat(self):
         for data in self.last_datas.values():
             self.alpha_hat += self.Pa * \
                 (self.drift_rates.get(data['id'], 1.0) * data['alpha_hat'] -
                  self.last_datas[self.id]['alpha_hat'])
 
-    def __update_beta_hat(self):
+    def update_beta_hat(self):
         for data in self.last_datas.values():
             self.beta_hat += self.Pb * (data['alpha_hat'] * data['time'] + data['beta_hat'] - (
                 self.last_datas[self.id]['alpha_hat'] * self.last_datas[self.id]['time'] + self.last_datas[self.id]['beta_hat']))
