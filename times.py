@@ -2,16 +2,16 @@ import random
 import math
 from node import connection
 from node.send import generate_broadcast
-from node.base import PredictNode, Data
+from node.base import PredictNode
 
-Pa: float = 0.1
-Pb: float = 0.1
+Pa: float = 0.2
+Pb: float = 0.2
 
 
 class TimeDrivenNode(PredictNode):
     c_beta: float = 0.01
     c_alpha1: float = 0.01
-    c_alpha2: float = 0.01
+    c_alpha2: float = 0.1
     
     def is_send(self) -> bool:
         if self.send_counter == 0:
