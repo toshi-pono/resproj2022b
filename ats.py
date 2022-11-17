@@ -10,6 +10,7 @@ Pb: float = 0.1
 class AtsNode(PredictNode):
     def is_send(self) -> bool:
         # send always
+        print(f"\t[send] {self.id} -> connect Node")
         return True
 
 
@@ -29,7 +30,8 @@ if __name__ == "__main__":
         nodes[i].send = generate_broadcast(nodes, connection_matrix)
 
     # Run the simulation
-    for t in range(50):
+    SYCLE_NUM = 150
+    for t in range(SYCLE_NUM):
         # diffを計算する
         max_diff = 0
         max_origin_diff = 0
@@ -45,11 +47,8 @@ if __name__ == "__main__":
                     max_diff = diff
                 if origin_diff > max_origin_diff:
                     max_origin_diff = origin_diff
+        print("----------------")
         print(f"t: {t} max_diff: {max_diff} max_origin_diff: {max_origin_diff}")
-        # print(
-        #     f"t: {t} nodes[0].alpha_hat: {nodes[1].alpha_hat} nodes[0].beta_hat: {nodes[1].beta_hat}")
-        # print("----------------")
-        # print("")
 
         for i in range(NODE_NUM):
             nodes[i].update_time(t)
@@ -57,3 +56,8 @@ if __name__ == "__main__":
             nodes[i].update_send()
         for i in range(NODE_NUM):
             nodes[i].update_prediction()
+        print("")
+
+    print("")
+    for i in range(NODE_NUM):
+        print(f"node {i} alpha_hat: {nodes[i].alpha_hat} beta_hat: {nodes[i].beta_hat} send_counter: {nodes[i].send_counter} predict_time: {nodes[i].get_predict_time(SYCLE_NUM)}")
