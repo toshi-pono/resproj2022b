@@ -30,6 +30,7 @@ class PredictNode:
     node_time: float
     send: Callable[[int, Data], None]
     raw_node: RawNode
+    send_counter: int = 0
 
     Pa: float
     Pb: float
@@ -81,6 +82,7 @@ class PredictNode:
     def update_send(self):
         if self.is_send():
             self.send(self.id, self.get_node_data())
+            self.send_counter += 1
             self.last_datas[self.id] = self.get_node_data()
 
     def update_prediction(self):
