@@ -1,0 +1,4 @@
+*
+
+# keep output directory
+!.gitignore
