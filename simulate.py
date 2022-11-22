@@ -17,7 +17,7 @@ BETA_ERROR = 0.5
 SEED = 42
 NODE_TYPE: ExtendNodeType = ExtendNodeType.DRIFT
 MAX_TIME = 50.0
-dT = 1.0
+dT = 0.1
 SYCLE_TIME = math.ceil(MAX_TIME / dT)
 
 OUTPUT_DIR = "output"
@@ -72,7 +72,7 @@ def main():
     diff_list: list[list[float]] = []
     alpha_list: list[list[float]] = [[] for _ in range(NODE_NUM)]
     beta_list: list[list[float]] = [[] for _ in range(NODE_NUM)]
-    for t in range(SYCLE_TIME):
+    for t in np.arange(0, MAX_TIME, dT):
         # diffを計算する
         diff = calc_diff(nodes, t)
         origin_diff = calc_origin_diff(nodes, t)
@@ -87,7 +87,7 @@ def main():
         print(f"t: {t} max_diff: {max_diff} max_origin_diff: {max_origin_diff}")
 
         for i in range(NODE_NUM):
-            nodes[i].update_time(t*0.1)
+            nodes[i].update_time(t)
         for i in range(NODE_NUM):
             nodes[i].update_send()
         for i in range(NODE_NUM):
@@ -100,9 +100,9 @@ def main():
             f"node {i} alpha_hat: {nodes[i].alpha_hat} beta_hat: {nodes[i].beta_hat} send_counter: {nodes[i].send_counter} predict_time: {nodes[i].get_predict_time(MAX_TIME)}")
 
     diff_list = np.array(diff_list).T.tolist()
-    draw.diff_plot(diff_list, OUTPUT_DIR + "/diff.png")
-    draw.diff_plot(alpha_list, OUTPUT_DIR + "/alpha.png")
-    draw.diff_plot(beta_list, OUTPUT_DIR + "/beta.png")
+    draw.diff_plot(diff_list, dT, f'{OUTPUT_DIR}/{NODE_TYPE.value}_diff.png')
+    draw.diff_plot(alpha_list, dT, f'{OUTPUT_DIR}/{NODE_TYPE.value}_alpha.png')
+    draw.diff_plot(beta_list, dT, f'{OUTPUT_DIR}/{NODE_TYPE.value}_beta.png')
 
 
 if __name__ == "__main__":
