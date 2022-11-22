@@ -6,21 +6,22 @@ from node import connection
 from node.send import generate_broadcast
 from node.base import PredictNode
 from node.extend import generate_extend_node, ExtendNodeType
+import node.utils as utils
 from graph import draw
 
 # モデルのパラメータ
-Pa: float = 0.3
-Pb: float = 0.1
+Pa: float = 0.2
+Pb: float = 0.2
 ALPHA_ERROR = 0.1
 BETA_ERROR = 0.5
 
 SEED = 42
 NODE_TYPE: ExtendNodeType = ExtendNodeType.ATS
 MAX_TIME = 50.0
-dT = 0.1
-SYCLE_TIME = math.ceil(MAX_TIME / dT)
+dT = 0.01
 
 OUTPUT_DIR = "output"
+DEBUG = False
 
 
 def generate_nodes() -> list[PredictNode]:
@@ -34,33 +35,16 @@ def generate_nodes() -> list[PredictNode]:
         alpha = random.uniform(1.0-ALPHA_ERROR, 1.0 + ALPHA_ERROR)
         beta = random.uniform(0.0-BETA_ERROR, 0.0 + BETA_ERROR)
         nodes.append(generate_extend_node(
-            NODE_TYPE, i, alpha, beta, Pa, Pb))
+            NODE_TYPE, i, alpha, beta, Pa, Pb, DEBUG))
     for i in range(NODE_NUM):
         nodes[i].send = generate_broadcast(nodes, connection_matrix)
 
     return nodes
 
 
-def calc_diff(nodes: list[PredictNode], time: float) -> list[float]:
-    diff_list: list[float] = []
-    for i in range(len(nodes)):
-        for j in range(i, len(nodes)):
-            if i == j:
-                continue
-            diff_list.append(nodes[i].get_predict_time(
-                time) - nodes[j].get_predict_time(time))
-    return diff_list
-
-
-def calc_origin_diff(nodes: list[PredictNode], time: float) -> list[float]:
-    diff_list: list[float] = []
-    for i in range(len(nodes)):
-        for j in range(i, len(nodes)):
-            if i == j:
-                continue
-            diff_list.append(nodes[i].get_node_time(
-                time) - nodes[j].get_node_time(time))
-    return diff_list
+def debug_print(*values):
+    if DEBUG:
+        print(*values)
 
 
 def main():
@@ -72,10 +56,10 @@ def main():
     diff_list: list[list[float]] = []
     alpha_list: list[list[float]] = [[] for _ in range(NODE_NUM)]
     beta_list: list[list[float]] = [[] for _ in range(NODE_NUM)]
-    for t in np.arange(0, MAX_TIME, dT):
+    for t in np.arange(0, MAX_TIME + dT, dT):
         # diffを計算する
-        diff = calc_diff(nodes, t)
-        origin_diff = calc_origin_diff(nodes, t)
+        diff = utils.calc_diff(nodes, t)
+        origin_diff = utils.calc_origin_diff(nodes, t)
         max_diff = max(np.abs(diff))
         max_origin_diff = max(np.abs(origin_diff))
         diff_list.append(diff)
@@ -83,23 +67,29 @@ def main():
         for i in range(NODE_NUM):
             alpha_list[i].append(nodes[i].alpha_hat)
             beta_list[i].append(nodes[i].beta_hat)
-        print("----------------")
-        print(f"t: {t} max_diff: {max_diff} max_origin_diff: {max_origin_diff}")
+        debug_print("----------------")
+        debug_print(
+            f"t: {t:.4f} max_diff: {max_diff:.4f} max_origin_diff: {max_origin_diff:.4f}")
 
         for i in range(NODE_NUM):
             nodes[i].update_time(t)
         for i in range(NODE_NUM):
             nodes[i].update()
 
-        print("")
+        debug_print("")
 
-    print("")
+    debug_print("")
     for i in range(NODE_NUM):
         print(
             f"node {i} alpha_hat: {nodes[i].alpha_hat} beta_hat: {nodes[i].beta_hat} send_counter: {nodes[i].send_counter} update_counter: {nodes[i].update_counter} predict_time: {nodes[i].get_predict_time(MAX_TIME)}")
 
+    max_diff = max(np.abs(utils.calc_diff(nodes, MAX_TIME)))
+    max_origin_diff = max(np.abs(utils.calc_origin_diff(nodes, MAX_TIME)))
+    print(
+        f"t: {t:.4f} max_diff: {max_diff} max_origin_diff: {max_origin_diff}")
     diff_list = np.array(diff_list).T.tolist()
-    draw.diff_plot(diff_list, dT, f'{OUTPUT_DIR}/{NODE_TYPE.value}_diff.png')
+    draw.diff_plot(diff_list, dT, f'{OUTPUT_DIR}/{NODE_TYPE.value}_diff.png',
+                   xlabel="Time t", ylabel="Synch. Error", ylim=(-1, 1))
     draw.diff_plot(alpha_list, dT, f'{OUTPUT_DIR}/{NODE_TYPE.value}_alpha.png')
     draw.diff_plot(beta_list, dT, f'{OUTPUT_DIR}/{NODE_TYPE.value}_beta.png')
 

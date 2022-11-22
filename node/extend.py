@@ -11,12 +11,12 @@ class ExtendNodeType(enum.Enum):
     TIMES = 'times'
 
 
-def generate_extend_node(node_type: ExtendNodeType, id: int, alpha: float, beta: float, Pa: float, Pb: float) -> PredictNode:
+def generate_extend_node(node_type: ExtendNodeType, id: int, alpha: float, beta: float, Pa: float, Pb: float, debug: bool = False) -> PredictNode:
     if node_type == ExtendNodeType.ATS:
-        return AtsNode(id=id, alpha=alpha, beta=beta, Pa=Pa, Pb=Pb)
+        return AtsNode(id=id, alpha=alpha, beta=beta, Pa=Pa, Pb=Pb, debug=debug)
     elif node_type == ExtendNodeType.DRIFT:
-        return DriftDrivenNode(id=id, alpha=alpha, beta=beta, Pa=Pa, Pb=Pb)
+        return DriftDrivenNode(id=id, alpha=alpha, beta=beta, Pa=Pa, Pb=Pb, debug=debug)
     elif node_type == ExtendNodeType.TIMES:
-        return TimeDrivenNode(id=id, alpha=alpha, beta=beta, Pa=Pa, Pb=Pb)
+        return TimeDrivenNode(id=id, alpha=alpha, beta=beta, Pa=Pa, Pb=Pb, debug=debug)
     else:
         raise ValueError(f"Invalid node type: {node_type}")

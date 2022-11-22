@@ -35,11 +35,12 @@ class PredictNode:
     before_update: float = -1.0
     update_interval: float = 1.0
     update_counter: int = 0
+    DEBUG = False
 
     Pa: float
     Pb: float
 
-    def __init__(self, id: int, alpha: float, beta: float, Pa: float = 0.1, Pb: float = 0.1):
+    def __init__(self, id: int, alpha: float, beta: float, Pa: float, Pb: float, debug: bool = False):
         self.id = id
         self.alpha_hat = 1.0
         self.beta_hat = 0.0
@@ -52,6 +53,11 @@ class PredictNode:
 
         self.last_datas[self.id] = self.get_node_data()
         self.drift_rates[self.id] = 1.0
+        self.DEBUG = debug
+
+    def debug_print(self, *values):
+        if (self.DEBUG):
+            print(f'\t[{self.id}]', *values)
 
     def get_node_data(self) -> Data:
         return {
