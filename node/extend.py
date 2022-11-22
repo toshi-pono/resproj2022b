@@ -1,8 +1,8 @@
 import enum
 from node.base import PredictNode
-from node.ats import AtsNode
-from node.drift import DriftDrivenNode
-from node.times import TimeDrivenNode
+from node.extendAts import AtsNode
+from node.extendDrift import DriftDrivenNode
+from node.extendTimes import TimeDrivenNode
 
 
 class ExtendNodeType(enum.Enum):
