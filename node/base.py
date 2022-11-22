@@ -31,6 +31,10 @@ class PredictNode:
     send: Callable[[int, Data], None]
     raw_node: RawNode
     send_counter: int = 0
+    now_update: bool = False
+    before_update: float = -1.0
+    update_interval: float = 1.0
+    update_counter: int = 0
 
     Pa: float
     Pb: float
@@ -79,11 +83,22 @@ class PredictNode:
         data['updated_at'] = self.node_time
         self.last_datas[data['id']] = data
 
+    def update(self):
+        self.now_update = False
+        if (self.node_time - self.before_update > self.update_interval):
+            self.update_counter += 1
+            self.before_update = self.node_time
+            self.now_update = True
+            self.update_prediction()
+            self.update_send()
+
     def update_send(self):
         if self.is_send():
             self.send(self.id, self.get_node_data())
             self.send_counter += 1
-            self.last_datas[self.id] = self.get_node_data()
+            nodeData = self.get_node_data()
+            nodeData['updated_at'] = self.node_time
+            self.last_datas[self.id] = nodeData
 
     def update_prediction(self):
         # Update prediction
@@ -99,7 +114,11 @@ class PredictNode:
     def update_beta_hat(self):
         beta_hat = self.last_datas[self.id]['beta_hat']
         for data in self.last_datas.values():
-            self.beta_hat += self.Pb * (data['alpha_hat'] * data['time'] + data['beta_hat'] - (
+            predTime = (self.last_datas[self.id]['time'] - data['updated_at']
+                        ) * self.drift_rates.get(data['id'], 1.0) + data['time']
+            if (data['id'] == self.id):
+                continue
+            self.beta_hat += self.Pb * (data['alpha_hat'] * predTime + data['beta_hat'] - (
                 self.last_datas[self.id]['alpha_hat'] * (self.last_datas[self.id]['time']) + beta_hat))
 
     def update_time(self, t: float):

@@ -3,7 +3,7 @@ from node.base import PredictNode
 
 class DriftDrivenNode(PredictNode):
     c_beta: float = 0.01
-    c_alpha1: float = 0.01
+    c_alpha1: float = 0.1
 
     def is_send(self) -> bool:
         if self.send_counter == 0:

@@ -9,13 +9,13 @@ from node.extend import generate_extend_node, ExtendNodeType
 from graph import draw
 
 # モデルのパラメータ
-Pa: float = 0.1
+Pa: float = 0.3
 Pb: float = 0.1
 ALPHA_ERROR = 0.1
 BETA_ERROR = 0.5
 
 SEED = 42
-NODE_TYPE: ExtendNodeType = ExtendNodeType.DRIFT
+NODE_TYPE: ExtendNodeType = ExtendNodeType.ATS
 MAX_TIME = 50.0
 dT = 0.1
 SYCLE_TIME = math.ceil(MAX_TIME / dT)
@@ -89,15 +89,14 @@ def main():
         for i in range(NODE_NUM):
             nodes[i].update_time(t)
         for i in range(NODE_NUM):
-            nodes[i].update_send()
-        for i in range(NODE_NUM):
-            nodes[i].update_prediction()
+            nodes[i].update()
+
         print("")
 
     print("")
     for i in range(NODE_NUM):
         print(
-            f"node {i} alpha_hat: {nodes[i].alpha_hat} beta_hat: {nodes[i].beta_hat} send_counter: {nodes[i].send_counter} predict_time: {nodes[i].get_predict_time(MAX_TIME)}")
+            f"node {i} alpha_hat: {nodes[i].alpha_hat} beta_hat: {nodes[i].beta_hat} send_counter: {nodes[i].send_counter} update_counter: {nodes[i].update_counter} predict_time: {nodes[i].get_predict_time(MAX_TIME)}")
 
     diff_list = np.array(diff_list).T.tolist()
     draw.diff_plot(diff_list, dT, f'{OUTPUT_DIR}/{NODE_TYPE.value}_diff.png')
