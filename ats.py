@@ -2,6 +2,7 @@ import random
 from node import connection
 from node.send import generate_broadcast
 from node.base import PredictNode
+from graph import draw
 
 Pa: float = 0.1
 Pb: float = 0.1
@@ -31,12 +32,15 @@ if __name__ == "__main__":
 
     # Run the simulation
     SYCLE_NUM = 150
+    diff_list: list[list[float]] = [[] for _ in range(NODE_NUM*NODE_NUM)]
+    alpha_list: list[list[float]] = [[] for _ in range(NODE_NUM)]
+    beta_list: list[list[float]] = [[] for _ in range(NODE_NUM)]
     for t in range(SYCLE_NUM):
         # diffを計算する
         max_diff = 0
         max_origin_diff = 0
         for i in range(NODE_NUM):
-            for j in range(NODE_NUM):
+            for j in range(i, NODE_NUM):
                 if i == j:
                     continue
                 diff = abs(nodes[i].get_predict_time(
@@ -47,11 +51,16 @@ if __name__ == "__main__":
                     max_diff = diff
                 if origin_diff > max_origin_diff:
                     max_origin_diff = origin_diff
+                diff_list[i+NODE_NUM*j].append(nodes[i].get_predict_time(
+                    t) - nodes[j].get_predict_time(t))
+        for i in range(NODE_NUM):
+            alpha_list[i].append(nodes[i].alpha_hat)
+            beta_list[i].append(nodes[i].beta_hat)
         print("----------------")
         print(f"t: {t} max_diff: {max_diff} max_origin_diff: {max_origin_diff}")
 
         for i in range(NODE_NUM):
-            nodes[i].update_time(t)
+            nodes[i].update_time(t*0.1)
         for i in range(NODE_NUM):
             nodes[i].update_send()
         for i in range(NODE_NUM):
@@ -60,4 +69,10 @@ if __name__ == "__main__":
 
     print("")
     for i in range(NODE_NUM):
-        print(f"node {i} alpha_hat: {nodes[i].alpha_hat} beta_hat: {nodes[i].beta_hat} send_counter: {nodes[i].send_counter} predict_time: {nodes[i].get_predict_time(SYCLE_NUM)}")
+        print(
+            f"node {i} alpha_hat: {nodes[i].alpha_hat} beta_hat: {nodes[i].beta_hat} send_counter: {nodes[i].send_counter} predict_time: {nodes[i].get_predict_time(SYCLE_NUM)}")
+
+    print(len(diff_list[0]))
+    draw.diff_plot(diff_list)
+    draw.diff_plot(alpha_list, "alpha.png")
+    draw.diff_plot(beta_list, "beta.png")

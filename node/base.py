@@ -97,9 +97,11 @@ class PredictNode:
                  self.last_datas[self.id]['alpha_hat'])
 
     def update_beta_hat(self):
+        beta_hat = self.last_datas[self.id]['beta_hat']
+        print(self.last_datas[self.id]['time'], self.node_time)
         for data in self.last_datas.values():
             self.beta_hat += self.Pb * (data['alpha_hat'] * data['time'] + data['beta_hat'] - (
-                self.last_datas[self.id]['alpha_hat'] * self.last_datas[self.id]['time'] + self.last_datas[self.id]['beta_hat']))
+                self.last_datas[self.id]['alpha_hat'] * (self.last_datas[self.id]['time']) + beta_hat))
 
     def update_time(self, t: float):
         self.node_time = self.get_node_time(t)
