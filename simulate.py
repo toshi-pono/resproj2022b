@@ -81,6 +81,7 @@ def main():
     diff_list: list[list[float]] = []
     alpha_list: list[list[float]] = [[] for _ in range(NODE_NUM)]
     beta_list: list[list[float]] = [[] for _ in range(NODE_NUM)]
+    send_time_list: list[list[float]] = [[] for _ in range(NODE_NUM)]
     for t in np.arange(0, MAX_TIME + dT, dT):
         # diffを計算する
         diff = utils.calc_diff(nodes, t)
@@ -96,10 +97,16 @@ def main():
         debug_print(
             f"t: {t:.4f} max_diff: {max_diff:.4f} max_origin_diff: {max_origin_diff:.4f}")
 
+        # ノードの状態を更新する
         for i in range(NODE_NUM):
             nodes[i].update_time(t)
         for i in range(NODE_NUM):
             nodes[i].update()
+
+        # 送信したかどうか確認する
+        for i in range(NODE_NUM):
+            if nodes[i].now_send:
+                send_time_list[i].append(t)
 
         debug_print("")
 
@@ -114,9 +121,11 @@ def main():
         f"t: {t:.4f} max_diff: {max_diff} max_origin_diff: {max_origin_diff}")
     diff_list = np.array(diff_list).T.tolist()
     draw.diff_plot(diff_list, dT, f'{OUTPUT_DIR}/{NODE_TYPE.value}_diff.png',
-                   xlabel="Time t", ylabel="Synch. Error", ylim=(-1, 1))
+                   ylabel="Synch. Error", ylim=(-1, 1))
     draw.diff_plot(alpha_list, dT, f'{OUTPUT_DIR}/{NODE_TYPE.value}_alpha.png')
     draw.diff_plot(beta_list, dT, f'{OUTPUT_DIR}/{NODE_TYPE.value}_beta.png')
+    draw.send_timing_plot(
+        send_time_list, dT, f'{OUTPUT_DIR}/{NODE_TYPE.value}_send_timing.png', xlabel="Time t", ylabel="Event of agent i")
 
 
 if __name__ == "__main__":

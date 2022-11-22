@@ -32,6 +32,7 @@ class PredictNode:
     raw_node: RawNode
     send_counter: int = 0
     now_update: bool = False
+    now_send: bool = False
     before_update: float = -1.0
     update_interval: float = 1.0
     update_counter: int = 0
@@ -91,6 +92,7 @@ class PredictNode:
 
     def update(self):
         self.now_update = False
+        self.now_send = False
         if (self.node_time - self.before_update > self.update_interval):
             self.update_counter += 1
             self.before_update = self.node_time
@@ -100,6 +102,7 @@ class PredictNode:
 
     def update_send(self):
         if self.is_send():
+            self.now_send = True
             self.send(self.id, self.get_node_data())
             self.send_counter += 1
             nodeData = self.get_node_data()
