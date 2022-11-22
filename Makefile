@@ -13,5 +13,9 @@ drift:
 times:
 	python simulate.py --node-type times > output/times.log
 
+.PHONY: comparison
+comparison:
+	python simulate_3.py > output/comparison.log
+
 .PHONY: all
-all: ats drift times
+all: ats drift times comparison
