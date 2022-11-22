@@ -1,6 +1,6 @@
 import random
-import math
 import numpy as np
+from argparse import ArgumentParser
 
 from node import connection
 from node.send import generate_broadcast
@@ -15,19 +15,43 @@ Pb: float = 0.2
 ALPHA_ERROR = 0.1
 BETA_ERROR = 0.5
 
-SEED = 42
+RAND_SEED = 42
 NODE_TYPE: ExtendNodeType = ExtendNodeType.ATS
 MAX_TIME = 50.0
 dT = 0.01
 
 OUTPUT_DIR = "output"
 DEBUG = False
+CONNECTION_FILE_PATH = "testcase/connection3.txt"
+
+
+def set_option():
+    global RAND_SEED, NODE_TYPE, MAX_TIME, dT, OUTPUT_DIR, DEBUG, CONNECTION_FILE_PATH
+
+    parser = ArgumentParser()
+    parser.add_argument("--seed", type=int, default=RAND_SEED)
+    parser.add_argument("--node-type", type=str, default=NODE_TYPE.value)
+    parser.add_argument("--max-time", type=float, default=MAX_TIME)
+    parser.add_argument("--dt", type=float, default=dT)
+    parser.add_argument("--output-dir", type=str, default=OUTPUT_DIR)
+    parser.add_argument("--debug", action="store_true", default=DEBUG)
+    parser.add_argument("--input", type=str, default=CONNECTION_FILE_PATH)
+
+    args = parser.parse_args()
+    RAND_SEED = args.seed
+    NODE_TYPE = ExtendNodeType(args.node_type)
+    MAX_TIME = args.max_time
+    dT = args.dt
+    OUTPUT_DIR = args.output_dir
+    DEBUG = args.debug
+    CONNECTION_FILE_PATH = args.input
+    return
 
 
 def generate_nodes() -> list[PredictNode]:
     # ノードの接続情報読み込み
     connection_matrix, NODE_NUM = connection.load_connection_matrix(
-        "testcase/connection3.txt")
+        CONNECTION_FILE_PATH)
 
     # ノードを生成する
     nodes: list[PredictNode] = []
@@ -48,7 +72,8 @@ def debug_print(*values):
 
 
 def main():
-    random.seed(SEED)
+    set_option()
+    random.seed(RAND_SEED)
     nodes = generate_nodes()
     NODE_NUM = len(nodes)
 

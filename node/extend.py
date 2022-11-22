@@ -10,6 +10,13 @@ class ExtendNodeType(enum.Enum):
     DRIFT = 'drift'
     TIMES = 'times'
 
+    @classmethod
+    def value_of(cls, value: str) -> 'ExtendNodeType':
+        for node_type in cls:
+            if node_type.value == value:
+                return node_type
+        raise ValueError(f"Invalid value: {value}")
+
 
 def generate_extend_node(node_type: ExtendNodeType, id: int, alpha: float, beta: float, Pa: float, Pb: float, debug: bool = False) -> PredictNode:
     if node_type == ExtendNodeType.ATS:
